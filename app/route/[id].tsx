@@ -754,7 +754,7 @@ const getStyles = (C: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#E8F5E9',
+    backgroundColor: hexToRgba(C.success, 0.12),
     marginHorizontal: 16,
     marginTop: 24,
     paddingVertical: 14,

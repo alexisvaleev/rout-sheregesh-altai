@@ -76,6 +76,25 @@ export default function ProfileScreen() {
           В тестовом профиле открыты все уровни и достижения для проверки
         </Text>
       </View>
+
+      <View style={styles.themeRow}>
+        <Ionicons
+          name={isDark ? 'sunny-outline' : 'moon-outline'}
+          size={18}
+          color={Colors.textSecondary}
+        />
+        <Text style={styles.themeRowText}>
+          {isDark ? 'Тёмная тема' : 'Светлая тема'}
+        </Text>
+        <Pressable style={styles.themeSwitch} onPress={toggleTheme}>
+          <View
+            style={[
+              styles.themeSwitchThumb,
+              { transform: [{ translateX: isDark ? 18 : 2 }] },
+            ]}
+          />
+        </Pressable>
+      </View>
     </ScrollView>
   );
 
@@ -302,11 +321,32 @@ export default function ProfileScreen() {
         </View>
       )}
 
+      <View style={{ height: 16 }} />
+
+      <View style={styles.themeRow}>
+        <Ionicons
+          name={isDark ? 'sunny-outline' : 'moon-outline'}
+          size={18}
+          color={Colors.textSecondary}
+        />
+        <Text style={styles.themeRowText}>
+          {isDark ? 'Тёмная тема' : 'Светлая тема'}
+        </Text>
+        <Pressable style={styles.themeSwitch} onPress={toggleTheme}>
+          <View
+            style={[
+              styles.themeSwitchThumb,
+              { transform: [{ translateX: isDark ? 18 : 2 }] },
+            ]}
+          />
+        </Pressable>
+      </View>
+
       <View style={{ height: 32 }} />
     </ScrollView>
   );
 
-  // ─── Единый рендер с плавающей кнопкой темы ─────────────────────────────────
+  // ─── Единый рендер
   return (
     <View style={styles.container}>
       <PhotoGallery visible={showGallery} onClose={() => setShowGallery(false)} />
@@ -315,15 +355,6 @@ export default function ProfileScreen() {
         onClose={() => setAuthVisible(false)}
         onSuccess={loginAsTest}
       />
-
-      {/* Плавающая кнопка темы — всегда в правом верхнем углу */}
-      <Pressable style={styles.themeToggle} onPress={toggleTheme}>
-        <Ionicons
-          name={isDark ? 'sunny-outline' : 'moon-outline'}
-          size={20}
-          color={Colors.textSecondary}
-        />
-      </Pressable>
 
       {isAuthenticated ? authContent : unauthContent}
     </View>
@@ -490,25 +521,33 @@ const getStyles = (C: ThemeColors) => StyleSheet.create({
     gap: 8,
     marginTop: 8,
   },
-  themeToggle: {
-    position: 'absolute',
-    top: 8,
-    right: 16,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: C.surface,
+  themeRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 100,
-    shadowColor: C.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-    boxShadow: `0 2px 4px ${C.shadow}`,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 10,
+  },
+  themeRowText: {
+    flex: 1,
+    fontSize: 14,
+    color: C.textSecondary,
+  },
+  themeSwitch: {
+    width: 44,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: C.surfaceAlt,
     borderWidth: 1,
     borderColor: C.border,
+    justifyContent: 'center',
+    padding: 2,
+  },
+  themeSwitchThumb: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: C.primary,
   },
 
   statsGrid: {
@@ -638,7 +677,7 @@ const getStyles = (C: ThemeColors) => StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#E8F5E9',
+    backgroundColor: C.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
   },

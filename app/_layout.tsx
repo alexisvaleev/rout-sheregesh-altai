@@ -5,14 +5,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { UserProvider } from '../src/context/UserContext';
 import { ThemeProvider, useTheme } from '../src/context/ThemeContext';
+import WelcomeOverlay from '../src/components/WelcomeOverlay';
 
 function RootLayoutInner() {
+  const [showWelcome, setShowWelcome] = React.useState(true);
   const { colors, isDark } = useTheme();
   const router = useRouter();
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
+      {showWelcome && <WelcomeOverlay onDismiss={() => setShowWelcome(false)} />}
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen

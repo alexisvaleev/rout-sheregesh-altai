@@ -369,6 +369,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   gastronomic: 'Гастрономия',
   active: 'Активный отдых',
   event: 'Событие',
+  complex: 'Туристический комплекс',
 };
 
 function getPOIEemoji(category: string): string {
@@ -377,6 +378,8 @@ function getPOIEemoji(category: string): string {
     case 'active': return '⛰';
     case 'cultural': return '\u{1F3DB}';
     case 'natural': return '\u{1F332}';
+    case 'event': return '\u{1F389}';
+    case 'complex': return '\u{1F3D6}';
     default: return '\u{1F4CD}';
   }
 }

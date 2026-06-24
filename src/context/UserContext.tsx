@@ -107,7 +107,7 @@ function checkAchievements(
         break;
       case 'ach-3':
         unlocked =
-          profile.routeProgress.filter((r) => r.completed).length >= 5;
+          profile.routeProgress.filter((r) => r.completed).length >= ROUTES.length;
         break;
       case 'ach-4':
         unlocked =

@@ -328,7 +328,7 @@ const getStyles = (C: ThemeColors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#FFF0F0',
+    backgroundColor: hexToRgba(C.error, 0.1),
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,

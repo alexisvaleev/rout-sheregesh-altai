@@ -22,7 +22,6 @@ interface RouteCardProps {
 const SEASON_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   winter: 'snow-outline',
   summer: 'sunny-outline',
-  'all-season': 'leaf-outline',
 };
 
 const DIFFICULTY_LABELS: Record<string, string> = {
