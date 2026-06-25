@@ -6,7 +6,7 @@ import { ThemeColors } from '../constants/themes';
 
 // Получите бесплатный ключ на https://openweathermap.org/price
 // Free tier: 60 запросов/мин, текущая погода
-const API_KEY = 'demo'; // замените на свой реальный ключ
+const API_KEY = '416dd6cd1ca2e136659dbbdd58625369'; // замените на свой реальный ключ
 
 interface WeatherData {
   temp: number;
@@ -50,21 +50,6 @@ export default function WeatherWidget({ latitude, longitude, locationName }: Wea
       try {
         setLoading(true);
         setError(null);
-
-        if (API_KEY === 'demo') {
-          // Демо-режим: показываем заглушку
-          await new Promise((r) => setTimeout(r, 600));
-          if (cancelled) return;
-          setWeather({
-            temp: 22,
-            feelsLike: 20,
-            description: 'Ясно',
-            icon: '01d',
-            humidity: 55,
-            windSpeed: 3.5,
-          });
-          return;
-        }
 
         const res = await fetch(
           `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric&lang=ru`
