@@ -91,6 +91,16 @@ export interface UserProfile {
   wishlistedRouteIds: string[];
 }
 
+export interface Review {
+  id: string;
+  routeId: string;
+  author: string;
+  avatar: string;
+  rating: number; // 1-5
+  text: string;
+  date: string;
+}
+
 export interface Region {
   latitude: number;
   longitude: number;

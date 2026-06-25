@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,9 @@ import { useThemeColors } from '../../src/context/ThemeContext';
 import { ThemeColors } from '../../src/constants/themes';
 import { ROUTES } from '../../src/data/routes';
 import { useUser } from '../../src/context/UserContext';
-import { Tariff } from '../../src/types';
+import { Tariff, Review } from '../../src/types';
+import ReviewSection from '../../src/components/ReviewSection';
+import { ROUTE_REVIEWS } from '../../src/data/reviews';
 import LeafletMap from '../../src/components/LeafletMap';
 import PhoneAuthModal from '../../src/components/PhoneAuthModal';
 import RouteGallery from '../../src/components/RouteGallery';
@@ -51,6 +53,7 @@ const DIFFICULTY_LABELS: Record<string, string> = {
 export default function RouteDetailScreen() {
   const [showAuth, setShowAuth] = useState(false);
   const [selectedTariff, setSelectedTariff] = useState<Tariff | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { profile, isAuthenticated, completeRoute, isRouteCompleted, toggleWishlist, isWishlisted } = useUser();
@@ -58,6 +61,11 @@ export default function RouteDetailScreen() {
   const styles = useMemo(() => getStyles(Colors), [Colors]);
 
   const route = useMemo(() => ROUTES.find((r) => r.id === id), [id]);
+
+  // Загружаем отзывы для маршрута
+  useEffect(() => {
+    setReviews(ROUTE_REVIEWS[id ?? ''] ?? []);
+  }, [id]);
 
   if (!route) {
     return (
@@ -78,6 +86,20 @@ export default function RouteDetailScreen() {
 
   const handleCompleteRoute = () => {
     completeRoute(route.id, route.distance);
+  };
+
+  const handleAddReview = (text: string, rating: number) => {
+    if (!route) return;
+    const newReview: Review = {
+      id: `rev-${Date.now()}`,
+      routeId: route.id,
+      author: profile.name || 'Гость',
+      avatar: '',
+      rating,
+      text,
+      date: new Date().toISOString().slice(0, 10),
+    };
+    setReviews((prev) => [newReview, ...prev]);
   };
 
   // Авто-выбор тарифа (если есть) — популярный или первый
@@ -326,6 +348,9 @@ export default function RouteDetailScreen() {
             </View>
           ))}
         </View>
+
+        {/* Reviews */}
+        <ReviewSection reviews={reviews} onAddReview={handleAddReview} />
 
         {/* Complete / Auth button */}
         {!isAuthenticated ? (
