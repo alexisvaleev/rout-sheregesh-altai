@@ -41,25 +41,27 @@ export const ROUTE_PHOTOS: Record<string, any[]> = {
 
   // ─── ❄️ Зимний тур «Первое знакомство с Сибирью» ────
   'route-4': [
-    require('../../photos/shoria.jpg'),
     'https://images.unsplash.com/photo-1478265409131-1f941d75671e?w=800&h=500&fit=crop',
     'https://images.unsplash.com/photo-1457264635006-5c7138f0cf73?w=800&h=500&fit=crop',
     'https://images.unsplash.com/photo-1517292987719-0369a794ec0f?w=800&h=500&fit=crop',
     'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800&h=500&fit=crop',
+    'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&h=500&fit=crop',
   ],
 
   // ─── ❄️ Зимний тур «Алтай за 3 дня» ─────────────────
   'route-5': [
     'https://images.unsplash.com/photo-1516663713099-37eb6d60c825?w=800&h=500&fit=crop',
     'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?w=800&h=500&fit=crop',
-    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=500&fit=crop',
+    'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&h=500&fit=crop',
     'https://images.unsplash.com/photo-1483347756197-71ef80e95f73?w=800&h=500&fit=crop',
     'https://images.unsplash.com/photo-1451337516015-6b6e9a44a8a3?w=800&h=500&fit=crop',
   ],
 
   // ─── 🎿 Grelka Fest ─────────────────────────────────
   'route-6': [
-    require('../../photos/grelka.jpg'),
+    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=500&fit=crop',
+    'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=800&h=500&fit=crop',
+    'https://images.unsplash.com/photo-1451337516015-6b6e9a44a8a3?w=800&h=500&fit=crop',
   ],
 };
 

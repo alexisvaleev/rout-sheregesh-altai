@@ -38,6 +38,7 @@ interface PhotoGalleryProps {
 
 export default function PhotoGallery({ visible, onClose }: PhotoGalleryProps) {
   const [viewerIndex, setViewerIndex] = useState<{ routeIdx: number; photoIdx: number } | null>(null);
+  const [failedImages, setFailedImages] = useState<string[]>([]);
   const Colors = useThemeColors();
   const styles = useMemo(() => getStyles(Colors), [Colors]);
   const { isAuthenticated, profile, addPhoto } = useUser();
@@ -145,11 +146,20 @@ export default function PhotoGallery({ visible, onClose }: PhotoGalleryProps) {
                       style={styles.gridItem}
                       onPress={() => setViewerIndex({ routeIdx: routeEntries.indexOf(item), photoIdx: idx })}
                     >
-                      <Image
-                        source={resolveSource(photo)}
-                        style={styles.gridImage}
-                        resizeMode="cover"
-                      />
+                      {failedImages.includes(`${item.routeId}-${idx}`) ? (
+                        <View style={[styles.gridImage, styles.gridImageFallback]}>
+                          <Ionicons name="image-outline" size={24} color={Colors.textSecondary} />
+                        </View>
+                      ) : (
+                        <Image
+                          source={resolveSource(photo)}
+                          style={styles.gridImage}
+                          resizeMode="cover"
+                          onError={() =>
+                            setFailedImages((prev) => [...prev, `${item.routeId}-${idx}`])
+                          }
+                        />
+                      )}
                       {isCollected && (
                         <View style={styles.collectedOverlay}>
                           <Ionicons name="checkmark-circle" size={16} color="#FFD700" />
@@ -198,11 +208,23 @@ export default function PhotoGallery({ visible, onClose }: PhotoGalleryProps) {
                 <Ionicons name="close" size={28} color="#fff" />
               </Pressable>
               <Text style={styles.viewerLabel}>{viewerPhoto.routeTitle}</Text>
-              <Image
-                source={viewerPhoto.source}
-                style={styles.viewerImage}
-                resizeMode="contain"
-              />
+              {viewerPhoto.source && failedImages.includes(`viewer-${viewerPhoto.routeIdx}-${viewerPhoto.photoIdx}`) ? (
+                <View style={[styles.viewerImage, styles.viewerImageFallback]}>
+                  <Ionicons name="image-outline" size={48} color="rgba(255,255,255,0.4)" />
+                </View>
+              ) : (
+                <Image
+                  source={viewerPhoto.source}
+                  style={styles.viewerImage}
+                  resizeMode="contain"
+                  onError={() =>
+                    setFailedImages((prev) => [
+                      ...prev,
+                      `viewer-${viewerPhoto.routeIdx}-${viewerPhoto.photoIdx}`,
+                    ])
+                  }
+                />
+              )}
               {/* Собрать фото из просмотрщика */}
               {isAuthenticated && viewerPhoto && (
                 <Pressable
@@ -401,6 +423,17 @@ const getStyles = (C: ThemeColors) => StyleSheet.create({
   viewerImage: {
     width: SCREEN_WIDTH,
     height: SCREEN_WIDTH * 0.75,
+  },
+  viewerImageFallback: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+  },
+  gridImageFallback: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: C.surfaceAlt,
   },
   viewerCollectBtn: {
     position: 'absolute',

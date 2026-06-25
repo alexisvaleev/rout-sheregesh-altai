@@ -27,6 +27,7 @@ interface RouteGalleryProps {
 
 export default function RouteGallery({ photos, routeId }: RouteGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [failedImages, setFailedImages] = useState<number[]>([]);
   const scrollRef = useRef<ScrollView>(null);
   const activeIndexRef = useRef(activeIndex);
   const Colors = useThemeColors();
@@ -79,12 +80,19 @@ export default function RouteGallery({ photos, routeId }: RouteGalleryProps) {
           const imageSource = typeof photo === 'string' ? { uri: photo } : photo;
           return (
             <View key={index} style={styles.card}>
-              <Image
-                source={imageSource}
-                style={styles.image}
-                resizeMode="cover"
-                accessibilityLabel={`Фото маршрута ${index + 1}`}
-              />
+              {failedImages.includes(index) ? (
+                <View style={[styles.image, styles.imageFallback]}>
+                  <Ionicons name="image-outline" size={36} color={Colors.textSecondary} />
+                </View>
+              ) : (
+                <Image
+                  source={imageSource}
+                  style={styles.image}
+                  resizeMode="cover"
+                  onError={() => setFailedImages((prev) => [...prev, index])}
+                  accessibilityLabel={`Фото маршрута ${index + 1}`}
+                />
+              )}
               {/* Тёмный градиент внизу для читаемости точек */}
               <View style={[styles.gradientOverlay, { pointerEvents: 'none' }]} />
 
@@ -159,6 +167,11 @@ const getStyles = (C: ThemeColors) => StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
+  },
+  imageFallback: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: C.surfaceAlt,
   },
   gradientOverlay: {
     position: 'absolute',
