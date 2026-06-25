@@ -125,7 +125,6 @@ export default function RouteDetailScreen() {
           <LeafletMap
             routes={[route]}
             selectedRouteId={route.id}
-            style={styles.map}
           />
         </View>
 
@@ -426,9 +425,7 @@ const getStyles = (C: ThemeColors) => StyleSheet.create({
   mapPreview: {
     height: MAP_HEIGHT,
     position: 'relative',
-  },
-  map: {
-    ...StyleSheet.absoluteFill,
+    overflow: 'hidden',
   },
   infoSection: {
     backgroundColor: C.surface,

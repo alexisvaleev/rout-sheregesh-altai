@@ -48,13 +48,17 @@ export default function LeafletMapWeb({
   routes,
   selectedRouteId,
   onMarkerPress,
-  style,
+  style: _style,
 }: LeafletMapWebProps) {
+  // НЕ используем incoming style напрямую на контейнере — он может содержать
+  // position: absolute, что конфликтует с flex: 1 на iOS. Размер берётся
+  // от родителя через flex. Если нужна кастомная позиция — оборачивай LeafletMap в свою View.
   const { colors, isDark } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletInstance>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const initializedRef = useRef(false);
+  const mapReadyRef = useRef(false);
 
   // OSRM кэш
   const [osrmPaths, setOsrmPaths] = useState<Record<string, number[][]>>({});
@@ -107,6 +111,7 @@ export default function LeafletMapWeb({
         mapRef.current.remove();
         mapRef.current = null;
       }
+      mapReadyRef.current = false;
     };
   }, []);
 
@@ -115,23 +120,39 @@ export default function LeafletMapWeb({
     if (status !== 'ready' || !containerRef.current || mapRef.current) return;
 
     const L = window.L;
-    const map = L.map(containerRef.current, {
+
+    // Принудительно задаём размер контейнеру перед инициализацией Leaflet,
+    // чтобы на iOS Safari карта не рендерилась нулевой высоты.
+    const containerEl = containerRef.current;
+    const parentRect = containerEl.parentElement?.getBoundingClientRect();
+    if (parentRect && parentRect.height > 0) {
+      containerEl.style.height = parentRect.height + 'px';
+      containerEl.style.width = parentRect.width + 'px';
+    } else if (parentRect && parentRect.height === 0) {
+      // Если родитель ещё не имеет размера — ставим fallback
+      containerEl.style.minHeight = '200px';
+    }
+
+    const map = L.map(containerEl, {
       zoomControl: true,
       attributionControl: false,
       maxZoom: 18,
       minZoom: 3,
     });
     mapRef.current = map;
+    mapReadyRef.current = true;
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 18,
     }).addTo(map);
 
-    // Сброс карты при первом рендере → invalidateSize
-    requestAnimationFrame(() => {
-      if (mapRef.current) {
-        mapRef.current.invalidateSize();
-      }
+    // Многократные invalidateSize для корректного рендеринга на iOS
+    [0, 100, 300, 600].forEach((delay) => {
+      setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.invalidateSize();
+        }
+      }, delay);
     });
 
     drawRoutes(L, map, routes, selectedRouteId || null, onMarkerPress, isDark, osrmPaths);
@@ -172,9 +193,44 @@ export default function LeafletMapWeb({
     layersToRemove.forEach((layer) => map.removeLayer(layer));
 
     drawRoutes(L, map, routes, selectedRouteId || null, onMarkerPress, isDark, osrmPaths);
+
+    // После обновления маршрутов (например, OSRM загрузился) обновляем размер карты
+    setTimeout(() => {
+      if (mapRef.current) mapRef.current.invalidateSize();
+    }, 50);
   }, [routes, selectedRouteId, onMarkerPress, status, isDark, osrmPaths]);
 
-  // ─── 5. Resize handler ────────────────────────────────────────────────────
+  // ─── 5. Resize handler с debounce ──────────────────────────────────────────
+  useEffect(() => {
+    let timer: number | null = null;
+    function handleResize() {
+      if (timer) cancelAnimationFrame(timer);
+      timer = requestAnimationFrame(() => {
+        if (mapRef.current) {
+          mapRef.current.invalidateSize();
+        }
+      });
+    }
+    window.addEventListener('resize', handleResize);
+
+    // ResizeObserver — ловим изменения размера контейнера даже без window.resize
+    // На iOS Safari карта может схлопнуться/раздуться после скролла или ререндера
+    let resizeObserver: ResizeObserver | null = null;
+    if (containerRef.current && typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        handleResize();
+      });
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+    };
+  }, []);
+
   const handleLayout = useCallback(() => {
     if (mapRef.current) {
       requestAnimationFrame(() => {
@@ -187,7 +243,7 @@ export default function LeafletMapWeb({
   const loadingCount = routes.filter((r) => osrmLoading[r.id]).length;
 
   return (
-    <View style={[styles.container, style]}>
+    <View style={styles.container}>
       {(status === 'loading' || status === 'error') && (
         <View style={[styles.statusOverlay, { backgroundColor: colors.surfaceAlt }]}>
           <ActivityIndicator size="large" color={status === 'error' ? colors.error : colors.primary} />
@@ -204,6 +260,8 @@ export default function LeafletMapWeb({
       <div
         ref={containerRef}
         style={{ width: '100%', height: '100%' }}
+        // Обработчик resize для контейнера
+        onLoad={handleLayout}
       />
     </View>
   );
@@ -316,7 +374,11 @@ function drawRoutes(
 
   // Подгоняем обзор под все маршруты
   if (allCoords.length > 1) {
-    map.fitBounds(allCoords, { padding: [50, 50], maxZoom: 10 });
+    try {
+      map.fitBounds(allCoords, { padding: [50, 50], maxZoom: 10 });
+    } catch (e) {
+      map.setView([52.2, 86.8], 7);
+    }
   } else if (allCoords.length === 1) {
     map.setView(allCoords[0], 10);
   }
