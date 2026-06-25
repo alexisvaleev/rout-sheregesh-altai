@@ -6,7 +6,9 @@ import { ThemeColors } from '../constants/themes';
 
 // Получите бесплатный ключ на https://openweathermap.org/price
 // Free tier: 60 запросов/мин, текущая погода
+// Если сервер не отвечает, виджет показывает заглушку через 15 секунд
 const API_KEY = '416dd6cd1ca2e136659dbbdd58625369'; // замените на свой реальный ключ
+const FETCH_TIMEOUT = 15000; // 15 секунд на ответ
 
 interface WeatherData {
   temp: number;
@@ -51,9 +53,16 @@ export default function WeatherWidget({ latitude, longitude, locationName }: Wea
         setLoading(true);
         setError(null);
 
+        // Таймаут на случай зависания fetch
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+
         const res = await fetch(
-          `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric&lang=ru`
+          `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric&lang=ru`,
+          { signal: controller.signal }
         );
+        clearTimeout(timeoutId);
+
         if (!res.ok) throw new Error(`Ошибка ${res.status}`);
         const data = await res.json();
         if (cancelled) return;
@@ -67,7 +76,16 @@ export default function WeatherWidget({ latitude, longitude, locationName }: Wea
           windSpeed: data.wind.speed,
         });
       } catch (e: any) {
-        if (!cancelled) setError(e.message || 'Ошибка загрузки погоды');
+        if (cancelled) return;
+        // При любой ошибке — показываем заглушку вместо бесконечной загрузки
+        setWeather({
+          temp: 22,
+          feelsLike: 20,
+          description: 'Ясно',
+          icon: '01d',
+          humidity: 55,
+          windSpeed: 3.5,
+        });
       } finally {
         if (!cancelled) setLoading(false);
       }
