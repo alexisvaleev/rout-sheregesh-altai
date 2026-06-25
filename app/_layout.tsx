@@ -8,14 +8,27 @@ import { ThemeProvider, useTheme } from '../src/context/ThemeContext';
 import WelcomeOverlay from '../src/components/WelcomeOverlay';
 
 function RootLayoutInner() {
-  const [showWelcome, setShowWelcome] = React.useState(true);
+  const [showWelcome, setShowWelcome] = React.useState(() => {
+    // Проверяем, не скрывал ли уже пользователь приветствие в этой сессии
+    if (typeof window !== 'undefined' && window.sessionStorage.getItem('welcome:dismissed')) {
+      return false;
+    }
+    return true;
+  });
   const { colors, isDark } = useTheme();
   const router = useRouter();
+
+  const dismissWelcome = React.useCallback(() => {
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem('welcome:dismissed', '1');
+    }
+    setShowWelcome(false);
+  }, []);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      {showWelcome && <WelcomeOverlay onDismiss={() => setShowWelcome(false)} />}
+      {showWelcome && <WelcomeOverlay onDismiss={dismissWelcome} />}
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
