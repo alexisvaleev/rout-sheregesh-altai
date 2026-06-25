@@ -41,14 +41,22 @@ function processFile(filePath) {
 
   if (ext === '.html' || ext === '.htm') {
     // Inject SPA path restoration script before </head>
+    // This runs BEFORE the main JS bundle (which has defer) so Expo Router
+    // sees a clean root pathname (/) instead of /rout-sheregesh-altai/
     const spaScript = `<script>
 (function() {
+  var base = '/rout-sheregesh-altai';
   var saved = sessionStorage.getItem('spa:path');
-  if (saved && saved !== '/') {
-    sessionStorage.removeItem('spa:path');
-    var base = '/rout-sheregesh-altai';
-    history.replaceState(null, '', base + saved);
+  if (saved) sessionStorage.removeItem('spa:path');
+
+  // Strip baseUrl so Expo Router sees clean routes.
+  // If we were redirected from 404.html, use the saved path instead.
+  var path = saved || window.location.pathname;
+  if (path.startsWith(base)) {
+    path = path.substring(base.length) || '/';
   }
+
+  history.replaceState(null, '', path + window.location.search + window.location.hash);
 })();
 </script>`;
     if (!content.includes('spa:path')) {
