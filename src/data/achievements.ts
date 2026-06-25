@@ -65,6 +65,38 @@ export const ACHIEVEMENTS: Omit<Achievement, 'unlocked' | 'unlockedAt'>[] = [
     requirement: '3 гастрономических точки',
     points: 250,
   },
+  {
+    id: 'ach-9',
+    title: 'Национальный колорит',
+    description: 'Спойте песню на башкирском языке и запишите видео',
+    icon: 'star',
+    requirement: 'Исполнить песню на башкирском',
+    points: 500,
+  },
+  {
+    id: 'ach-10',
+    title: 'Привет по-шорски',
+    description: 'Выучите приветствие на шорском языке — «Эзен!»',
+    icon: 'compass',
+    requirement: 'Выучить «Эзен» на шорском',
+    points: 300,
+  },
+  {
+    id: 'ach-11',
+    title: 'Посол маршрута',
+    description: 'Выложите фото маршрута в соцсети с хештегом #ДвеЛегенды',
+    icon: 'camera',
+    requirement: 'Опубликовать фото с хештегом',
+    points: 400,
+  },
+  {
+    id: 'ach-12',
+    title: 'Дух Сибири',
+    description: 'Сфотографируйтесь в национальном костюме на фоне гор',
+    icon: 'mountain',
+    requirement: 'Фото в костюме на фоне гор',
+    points: 600,
+  },
 ];
 
 export const LEVELS = [

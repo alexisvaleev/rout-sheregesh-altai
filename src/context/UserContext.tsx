@@ -128,6 +128,12 @@ function checkAchievements(
       case 'ach-8':
         unlocked = false;
         break;
+      case 'ach-9':
+      case 'ach-10':
+      case 'ach-11':
+      case 'ach-12':
+        unlocked = false;
+        break;
     }
 
     return {
