@@ -8,6 +8,7 @@ import React, {
 import { UserProfile, Achievement, RouteProgress, UserLevel } from '../types';
 import { ACHIEVEMENTS, LEVELS } from '../data/achievements';
 import { ROUTES } from '../data/routes';
+import { ROUTE_PHOTOS } from '../data/routePhotos';
 
 // ─── Константы ───────────────────────────────────────────────────────────────────
 
@@ -45,7 +46,7 @@ const TEST_PROGRESS: RouteProgress[] = ROUTES.map((r, i) => ({
   routeId: r.id,
   completed: true,
   progress: 100,
-  photosCollected: i + 1,
+  photosCollected: 5,
   pointsEarned: Math.round(r.distance * 10),
   completedAt: new Date().toISOString(),
   startedAt: new Date(Date.now() - 86400000 * 7).toISOString(),
@@ -55,8 +56,8 @@ const TEST_PROFILE: UserProfile = {
   id: 'test-user',
   name: 'Тестовый пользователь',
   avatar: '',
-  level: LEVELS[6], // Дух Сибири
-  totalPoints: 15000,
+  level: LEVELS[7], // Серебряный Алтай
+  totalPoints: 25000,
   routesCompleted: ROUTES.length,
   totalDistance: ROUTES.reduce((s, r) => s + r.distance, 0),
   achievements: TEST_ACHIEVEMENTS,
@@ -170,6 +171,35 @@ function checkAchievements(
       case 'ach-20':
         unlocked = false;
         break;
+      case 'ach-21':
+        unlocked = profile.routeProgress.some(
+          (r) => r.routeId === 'route-1' && r.completed
+        );
+        break;
+      case 'ach-22':
+        unlocked = Object.entries(ROUTE_PHOTOS).some(([routeId, photos]) => {
+          const progress = profile.routeProgress.find((r) => r.routeId === routeId);
+          return progress ? progress.photosCollected >= photos.length : false;
+        });
+        break;
+      case 'ach-23':
+        unlocked = profile.routesCompleted >= 5;
+        break;
+      case 'ach-24':
+        unlocked = profile.totalDistance >= 2000;
+        break;
+      case 'ach-25': {
+        const sheregeshRoutes = ROUTES.filter((r) =>
+          r.tags.includes('шерегеш') ||
+          r.title.includes('Шерегеш') ||
+          r.subtitle.includes('Шерегеш')
+        );
+        const completedIds = profile.routeProgress
+          .filter((r) => r.completed)
+          .map((r) => r.routeId);
+        unlocked = sheregeshRoutes.every((r) => completedIds.includes(r.id));
+        break;
+      }
     }
 
     return {

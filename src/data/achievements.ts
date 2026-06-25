@@ -161,6 +161,46 @@ export const ACHIEVEMENTS: Omit<Achievement, 'unlocked' | 'unlockedAt'>[] = [
     requirement: '2 маршрута за 7 дней',
     points: 700,
   },
+  {
+    id: 'ach-21',
+    title: 'Покоритель',
+    description: 'Завершите маршрут «Две легенды Сибири» — самый сложный маршрут',
+    icon: 'trophy',
+    requirement: 'Завершить маршрут «Две легенды Сибири»',
+    points: 500,
+  },
+  {
+    id: 'ach-22',
+    title: 'Фотоколлекционер',
+    description: 'Соберите все фотографии хотя бы на одном маршруте',
+    icon: 'camera',
+    requirement: 'Все фото одного маршрута',
+    points: 300,
+  },
+  {
+    id: 'ach-23',
+    title: 'Золотой компас',
+    description: 'Пройдите 5 разных маршрутов',
+    icon: 'compass',
+    requirement: '5 завершённых маршрутов',
+    points: 500,
+  },
+  {
+    id: 'ach-24',
+    title: 'Две тысячи километров',
+    description: 'Преодолейте суммарно 2 000 км по маршрутам',
+    icon: 'star',
+    requirement: 'Суммарная дистанция 2 000 км',
+    points: 2500,
+  },
+  {
+    id: 'ach-25',
+    title: 'Король горы',
+    description: 'Пройдите все маршруты, проходящие через Шерегеш',
+    icon: 'mountain',
+    requirement: 'Все маршруты Шерегеша',
+    points: 500,
+  },
 ];
 
 export const LEVELS = [
@@ -171,4 +211,5 @@ export const LEVELS = [
   { level: 5, title: 'Хранитель традиций', minPoints: 6000, color: '#D4A574' },
   { level: 6, title: 'Легенда Шерегеша — Алтая', minPoints: 10000, color: '#B366CC' },
   { level: 7, title: 'Дух Сибири', minPoints: 15000, color: '#FF6B6B' },
+  { level: 8, title: 'Серебряный Алтай', minPoints: 20000, color: '#7EC8E3' },
 ];
