@@ -67,7 +67,7 @@ function processFile(filePath) {
   return content;
 }
 
-// Only index.html needs processing in our case, but walk all HTML just in case
+// Walk all files and fix paths
 function walk(dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const entry of entries) {
@@ -77,7 +77,28 @@ function walk(dir) {
     } else if (/\.html?$/i.test(entry.name)) {
       processFile(fullPath);
       console.log('✓ ' + path.relative(DIST, fullPath));
+    } else if (/\.js$/i.test(entry.name)) {
+      fixJsAssetPaths(fullPath);
     }
+  }
+}
+
+function fixJsAssetPaths(filePath) {
+  let content = fs.readFileSync(filePath, 'utf8');
+  const original = content;
+
+  // Fix asset paths in JS bundle:
+  // Replace "assets/... → "rout-sheregesh-altai/assets/...
+  // Only match absolute paths starting with "/assets/ (not ./assets/)
+  // Use lookbehind to ensure it's preceded by a quote with no dot before it
+  content = content.replace(
+    /(["'])\/assets\//g,
+    '$1' + PREFIX + '/assets/'
+  );
+
+  if (content !== original) {
+    fs.writeFileSync(filePath, content, 'utf8');
+    console.log('✓ ' + path.relative(DIST, filePath) + ' (paths fixed)');
   }
 }
 
@@ -88,11 +109,28 @@ const indexContent = fs.readFileSync(path.join(DIST, 'index.html'), 'utf8');
 const hasPrefix = indexContent.includes(PREFIX + '/favicon.ico');
 const hasSpaScript = indexContent.includes('spa:path');
 
-if (hasPrefix && hasSpaScript) {
-  console.log('✓ All paths prefixed and SPA script injected');
+// Also verify JS bundle
+const jsFiles = fs.readdirSync(path.join(DIST, '_expo', 'static', 'js', 'web'), { recursive: true })
+  .filter(f => f.endsWith('.js'))
+  .map(f => path.join(DIST, '_expo', 'static', 'js', 'web', f))
+  .filter(fs.existsSync.bind(fs));
+
+let jsOk = true;
+for (const jsFile of jsFiles) {
+  const jsContent = fs.readFileSync(jsFile, 'utf8');
+  // Check that assets paths are prefixed (sample check)
+  if (jsContent.includes('"/assets/node_modules')) {
+    jsOk = false;
+    console.error('✗ JS bundle still has unprefixed paths: ' + path.relative(DIST, jsFile));
+  }
+}
+
+if (hasPrefix && hasSpaScript && jsOk) {
+  console.log('✓ All paths prefixed, SPA script injected, JS assets fixed');
 } else {
   console.error('✗ Verification failed!');
-  console.error('  hasPrefix:', hasPrefix);
-  console.error('  hasSpaScript:', hasSpaScript);
+  if (!hasPrefix) console.error('  - index.html missing path prefix');
+  if (!hasSpaScript) console.error('  - index.html missing SPA script');
+  if (!jsOk) console.error('  - JS bundle has unprefixed asset paths');
   process.exit(1);
 }
