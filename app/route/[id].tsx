@@ -190,7 +190,7 @@ export default function RouteDetailScreen() {
         </View>
 
         {/* Photo Gallery */}
-        <RouteGallery photos={ROUTE_PHOTOS[route.id] || []} />
+        <RouteGallery photos={ROUTE_PHOTOS[route.id] || []} routeId={route.id} />
 
         {/* Seasonality */}
         <SeasonIndicator season={route.season} />

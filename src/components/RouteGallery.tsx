@@ -8,10 +8,12 @@ import {
   Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '../context/ThemeContext';
 import { ThemeColors } from '../constants/themes';
+import { useUser } from '../context/UserContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GALLERY_HEIGHT = 260;
@@ -19,29 +21,43 @@ const GALLERY_HEIGHT = 260;
 interface RouteGalleryProps {
   /** Массив image sources из require() — берётся из ROUTE_PHOTOS */
   photos: any[];
+  /** ID маршрута для сбора фотографий */
+  routeId?: string;
 }
 
-export default function RouteGallery({ photos }: RouteGalleryProps) {
+export default function RouteGallery({ photos, routeId }: RouteGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
   const activeIndexRef = useRef(activeIndex);
   const Colors = useThemeColors();
   const styles = useMemo(() => getStyles(Colors), [Colors]);
+  const { isAuthenticated, profile, addPhoto } = useUser();
 
   // Обновляем ref при изменении activeIndex
   activeIndexRef.current = activeIndex;
 
-  const handleScrollEnd = useCallback(
+  const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       const offsetX = e.nativeEvent.contentOffset.x;
       const pageWidth = e.nativeEvent.layoutMeasurement?.width || SCREEN_WIDTH;
+      if (pageWidth <= 0) return;
       const index = Math.round(offsetX / pageWidth);
-      if (index !== activeIndexRef.current) {
+      if (index >= 0 && index < photos.length && index !== activeIndexRef.current) {
+        activeIndexRef.current = index;
         setActiveIndex(index);
       }
     },
-    [] // нет зависимостей — читаем activeIndex через ref
+    [photos.length]
   );
+
+  const handleCollectPhoto = useCallback(() => {
+    if (!routeId || !isAuthenticated) return;
+    addPhoto(routeId);
+  }, [routeId, isAuthenticated, addPhoto]);
+
+  // Количество собранных фото для этого маршрута
+  const routeProgress = routeId ? profile.routeProgress.find((r) => r.routeId === routeId) : null;
+  const collectedCount = routeProgress?.photosCollected ?? 0;
 
   // Если фото нет — не рендерим компонент
   if (!photos || photos.length === 0) return null;
@@ -54,7 +70,9 @@ export default function RouteGallery({ photos }: RouteGalleryProps) {
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={handleScrollEnd}
+        onScroll={handleScroll}
+        onMomentumScrollEnd={handleScroll}
+        scrollEventThrottle={80}
         decelerationRate="fast"
       >
         {photos.map((photo, index) => {
@@ -69,12 +87,27 @@ export default function RouteGallery({ photos }: RouteGalleryProps) {
               />
               {/* Тёмный градиент внизу для читаемости точек */}
               <View style={[styles.gradientOverlay, { pointerEvents: 'none' }]} />
+
+              {/* Кнопка сбора фото */}
+              {isAuthenticated && routeId && (
+                <Pressable
+                  style={styles.collectBtn}
+                  onPress={handleCollectPhoto}
+                  hitSlop={8}
+                >
+                  <Ionicons
+                    name="camera-outline"
+                    size={18}
+                    color={collectedCount > 0 ? '#FFD700' : '#fff'}
+                  />
+                </Pressable>
+              )}
             </View>
           );
         })}
       </ScrollView>
 
-      {/* Нижняя плашка: точки + счётчик */}
+      {/* Нижняя плашка: точки + счётчик + счётчик сбора */}
       {photos.length > 1 && (
         <View style={styles.footer}>
           {/* Точки пагинации */}
@@ -90,12 +123,21 @@ export default function RouteGallery({ photos }: RouteGalleryProps) {
             ))}
           </View>
 
-          {/* Счётчик */}
-          <View style={styles.counterBadge}>
-            <Ionicons name="images-outline" size={12} color={Colors.textOnPrimary} />
-            <Text style={styles.counterText}>
-              {activeIndex + 1}/{photos.length}
-            </Text>
+          <View style={styles.footerRight}>
+            {/* Значок собранных фото */}
+            {isAuthenticated && routeId && collectedCount > 0 && (
+              <View style={styles.collectedBadge}>
+                <Ionicons name="camera" size={11} color="#FFD700" />
+                <Text style={styles.collectedBadgeText}>{collectedCount}</Text>
+              </View>
+            )}
+            {/* Счётчик */}
+            <View style={styles.counterBadge}>
+              <Ionicons name="images-outline" size={12} color={Colors.textOnPrimary} />
+              <Text style={styles.counterText}>
+                {activeIndex + 1}/{photos.length}
+              </Text>
+            </View>
           </View>
         </View>
       )}
@@ -107,7 +149,7 @@ const getStyles = (C: ThemeColors) => StyleSheet.create({
   container: {
     height: GALLERY_HEIGHT,
     position: 'relative',
-    marginBottom: 0, // стыкуется с секцией информации ниже
+    marginBottom: 0,
   },
   card: {
     width: SCREEN_WIDTH,
@@ -126,6 +168,18 @@ const getStyles = (C: ThemeColors) => StyleSheet.create({
     height: 60,
     backgroundColor: 'rgba(0,0,0,0.25)',
   },
+  collectBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
   footer: {
     position: 'absolute',
     bottom: 12,
@@ -134,6 +188,11 @@ const getStyles = (C: ThemeColors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  footerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   dots: {
     flexDirection: 'row',
@@ -152,6 +211,20 @@ const getStyles = (C: ThemeColors) => StyleSheet.create({
   },
   dotInactive: {
     backgroundColor: 'rgba(255,255,255,0.5)',
+  },
+  collectedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  collectedBadgeText: {
+    color: '#FFD700',
+    fontSize: 11,
+    fontWeight: '700',
   },
   counterBadge: {
     flexDirection: 'row',

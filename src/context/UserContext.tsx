@@ -55,13 +55,13 @@ const TEST_PROFILE: UserProfile = {
   id: 'test-user',
   name: 'Тестовый пользователь',
   avatar: '',
-  level: LEVELS[4], // Легенда Шерегеша — Алтая
-  totalPoints: 7000,
+  level: LEVELS[6], // Дух Сибири
+  totalPoints: 15000,
   routesCompleted: ROUTES.length,
   totalDistance: ROUTES.reduce((s, r) => s + r.distance, 0),
   achievements: TEST_ACHIEVEMENTS,
   routeProgress: TEST_PROGRESS,
-  wishlistedRouteIds: ['route-1', 'route-6'],
+  wishlistedRouteIds: ['route-1', 'route-3', 'route-6'],
 };
 
 // ─── State ───────────────────────────────────────────────────────────────────
@@ -132,6 +132,42 @@ function checkAchievements(
       case 'ach-10':
       case 'ach-11':
       case 'ach-12':
+        unlocked = false;
+        break;
+      case 'ach-13':
+        unlocked =
+          profile.routeProgress.reduce(
+            (sum, r) => sum + r.photosCollected,
+            0
+          ) >= 15;
+        break;
+      case 'ach-14':
+        unlocked = profile.totalDistance >= 1000;
+        break;
+      case 'ach-15': {
+        const winterRoutes = ROUTES.filter((r) => r.season === 'winter');
+        const completedIds = profile.routeProgress
+          .filter((r) => r.completed)
+          .map((r) => r.routeId);
+        unlocked = winterRoutes.every((r) => completedIds.includes(r.id));
+        break;
+      }
+      case 'ach-16': {
+        const summerRoutes = ROUTES.filter((r) => r.season === 'summer');
+        const completedIds = profile.routeProgress
+          .filter((r) => r.completed)
+          .map((r) => r.routeId);
+        unlocked = summerRoutes.every((r) => completedIds.includes(r.id));
+        break;
+      }
+      case 'ach-17':
+        unlocked = false;
+        break;
+      case 'ach-18':
+        unlocked = profile.wishlistedRouteIds.length >= 3;
+        break;
+      case 'ach-19':
+      case 'ach-20':
         unlocked = false;
         break;
     }
@@ -239,9 +275,21 @@ function userReducer(state: UserState, action: UserAction): UserState {
         }
         return r;
       });
+      const totalPhotos = newProgress.reduce(
+        (sum, r) => sum + r.photosCollected,
+        0
+      );
+      const newAchievements = checkAchievements(
+        { ...state.profile, routeProgress: newProgress },
+        ACHIEVEMENTS
+      );
       return {
         ...state,
-        profile: { ...state.profile, routeProgress: newProgress },
+        profile: {
+          ...state.profile,
+          routeProgress: newProgress,
+          achievements: newAchievements,
+        },
       };
     }
 
@@ -249,13 +297,19 @@ function userReducer(state: UserState, action: UserAction): UserState {
       if (!state.isAuthenticated) return state;
       const { routeId } = action;
       const exists = state.profile.wishlistedRouteIds.includes(routeId);
+      const newWishlist = exists
+        ? state.profile.wishlistedRouteIds.filter((id) => id !== routeId)
+        : [...state.profile.wishlistedRouteIds, routeId];
+      const newAchievements = checkAchievements(
+        { ...state.profile, wishlistedRouteIds: newWishlist },
+        ACHIEVEMENTS
+      );
       return {
         ...state,
         profile: {
           ...state.profile,
-          wishlistedRouteIds: exists
-            ? state.profile.wishlistedRouteIds.filter((id) => id !== routeId)
-            : [...state.profile.wishlistedRouteIds, routeId],
+          wishlistedRouteIds: newWishlist,
+          achievements: newAchievements,
         },
       };
     }
