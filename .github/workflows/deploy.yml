@@ -36,6 +36,9 @@ jobs:
       - name: Export web build
         run: npx expo export --platform web
 
+      - name: Add .nojekyll
+        run: touch dist/.nojekyll
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
