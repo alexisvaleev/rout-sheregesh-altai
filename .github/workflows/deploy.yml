@@ -36,8 +36,46 @@ jobs:
       - name: Export web build
         run: npx expo export --platform web
 
-      - name: Add .nojekyll
-        run: touch dist/.nojekyll
+      - name: Add .nojekyll + SPA routing
+        run: |
+          touch dist/.nojekyll
+
+          # 404.html — сохраняет путь и редиректит на главную
+          cat > dist/404.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <title>Redirecting...</title>
+            <script>
+              sessionStorage.setItem('spa:path', window.location.pathname.replace(/^\/[^/]+/, '') + window.location.search + window.location.hash);
+              window.location.replace('/rout-sheregesh-altai/');
+            </script>
+          </head>
+          <body></body>
+          </html>
+          EOF
+
+          # Инжектим скрипт восстановления пути в index.html
+          node -e "
+            const fs = require('fs');
+            const path = 'dist/index.html';
+            let html = fs.readFileSync(path, 'utf8');
+            const script = \`<script>
+            (function() {
+              var saved = sessionStorage.getItem('spa:path');
+              if (saved && saved !== '/') {
+                sessionStorage.removeItem('spa:path');
+                var base = '/rout-sheregesh-altai';
+                history.replaceState(null, '', base + saved);
+              }
+            })();
+            </script>\`;
+            html = html.replace('</head>', script + '</head>');
+            fs.writeFileSync(path, html);
+            console.log('SPA routing injected into index.html');
+          "
+          echo "SPA routing setup done"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
