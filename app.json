@@ -28,6 +28,7 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
+      "baseUrl": "/rout-sheregesh-altai",
       "config": {
         "googleMaps": {
           "apiKey": "WEB_API_KEY_PLACEHOLDER"
