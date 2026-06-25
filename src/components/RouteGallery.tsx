@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -24,18 +24,23 @@ interface RouteGalleryProps {
 export default function RouteGallery({ photos }: RouteGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
+  const activeIndexRef = useRef(activeIndex);
   const Colors = useThemeColors();
-  const styles = React.useMemo(() => getStyles(Colors), [Colors]);
+  const styles = useMemo(() => getStyles(Colors), [Colors]);
 
-  const handleScroll = useCallback(
+  // Обновляем ref при изменении activeIndex
+  activeIndexRef.current = activeIndex;
+
+  const handleScrollEnd = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       const offsetX = e.nativeEvent.contentOffset.x;
-      const index = Math.round(offsetX / SCREEN_WIDTH);
-      if (index !== activeIndex) {
+      const pageWidth = e.nativeEvent.layoutMeasurement?.width || SCREEN_WIDTH;
+      const index = Math.round(offsetX / pageWidth);
+      if (index !== activeIndexRef.current) {
         setActiveIndex(index);
       }
     },
-    [activeIndex]
+    [] // нет зависимостей — читаем activeIndex через ref
   );
 
   // Если фото нет — не рендерим компонент
@@ -49,9 +54,8 @@ export default function RouteGallery({ photos }: RouteGalleryProps) {
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={handleScroll}
+        onMomentumScrollEnd={handleScrollEnd}
         decelerationRate="fast"
-        scrollEventThrottle={16}
       >
         {photos.map((photo, index) => {
           const imageSource = typeof photo === 'string' ? { uri: photo } : photo;
